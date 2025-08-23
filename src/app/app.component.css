@@ -1,0 +1,9 @@
+/* Reset demo styles */
+:host { display: block; padding: 16px; background: #f8fafc; min-height: 100vh; direction: rtl; font-family: Vazirmatn, Inter, Arial, sans-serif; }
+.container { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+.block { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; }
+.block h3 { margin-top: 0; font-size: 16px; }
+textarea { width: 100%; min-height: 180px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+.examples { display: flex; gap: 8px; flex-wrap: wrap; }
+.example-btn { padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; cursor: pointer; }
+.renderer { background: #fff; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 12px; }
