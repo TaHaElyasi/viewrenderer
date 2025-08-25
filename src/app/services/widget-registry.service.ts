@@ -5,28 +5,39 @@ import { CardComponent } from '../widgets/card.component';
 import { TabsComponent } from '../widgets/tabs.component';
 import { TabComponent } from '../widgets/tab.component';
 
+interface WidgetRegistration {
+  component: Type<any>;
+  isAtomic: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class WidgetRegistryService {
-  private registry = new Map<string, Type<any>>();
+  private registry = new Map<string, WidgetRegistration>();
 
   constructor() {
     this.registerDefaults();
   }
 
   private registerDefaults() {
-    this.register('label', LabelComponent);
-    this.register('button', ButtonComponent);
-    this.register('card', CardComponent);
-    this.register('tabs', TabsComponent);
-    this.register('tab', TabComponent);
+    this.register('label', LabelComponent, false);
+    this.register('button', ButtonComponent, false);
+    this.register('card', CardComponent, true); // atomic widget
+    this.register('tabs', TabsComponent, false);
+    this.register('tab', TabComponent, true); // atomic widget
   }
 
-  register(tag: string, component: Type<any>) {
-    this.registry.set(tag.toLowerCase(), component);
+  register(tag: string, component: Type<any>, isAtomic: boolean = false) {
+    this.registry.set(tag.toLowerCase(), { component, isAtomic });
   }
 
   get(tag: string): Type<any> | undefined {
-    return this.registry.get(tag.toLowerCase());
+    const registration = this.registry.get(tag.toLowerCase());
+    return registration?.component;
+  }
+
+  isAtomic(tag: string): boolean {
+    const registration = this.registry.get(tag.toLowerCase());
+    return registration?.isAtomic || false;
   }
 
   has(tag: string): boolean {
@@ -37,7 +48,7 @@ export class WidgetRegistryService {
     this.registry.clear();
   }
 
-  entries(): [string, Type<any>][] {
+  entries(): [string, WidgetRegistration][] {
     return Array.from(this.registry.entries());
   }
 }

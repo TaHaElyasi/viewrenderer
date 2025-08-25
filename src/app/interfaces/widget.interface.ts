@@ -6,4 +6,10 @@ export interface WidgetComponent {
   
   // Content host for nested components (optional)
   contentHost?: ViewContainerRef;
+  
+  // Flag to indicate if this widget is atomic (can render XML content internally)
+  isAtomic?: boolean;
+  
+  // Raw XML content for atomic widgets to render internally
+  xmlContent?: string;
 }

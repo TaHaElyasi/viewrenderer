@@ -88,16 +88,35 @@ export class ViewRendererComponent implements OnChanges {
       attrs[camel] = coerced
     }
 
+    // Check if this widget is atomic
+    const isAtomic = this.widgets.isAtomic(tag)
+    
     // Pass generic attrs object
     try { compRef.setInput('attrs' as any, attrs) } catch {}
+    
+    // Set atomic flag and XML content for atomic widgets
+    const instance: any = compRef.instance as any
+    if (isAtomic && instance) {
+      try { compRef.setInput('isAtomic' as any, true) } catch {}
+      
+      // Extract inner XML content for atomic widgets using XMLSerializer (innerHTML is unreliable in XML docs)
+      const innerXml = this.serializeInnerXml(el)
+      if (innerXml.trim()) {
+        try { compRef.setInput('xmlContent' as any, innerXml) } catch {}
+      }
+    }
 
     // Also try to set direct inputs for backward compatibility (optional)
     for (const key of Object.keys(attrs)) {
       try { compRef.setInput(key as any, attrs[key]) } catch {}
     }
 
-    // Decide child container
-    const instance: any = compRef.instance as any
+    // For atomic widgets, don't render children here - let the widget handle it internally
+    if (isAtomic) {
+      return
+    }
+
+    // Decide child container for non-atomic widgets
     const hasOwnContentHost = instance && instance.contentHost && typeof instance.contentHost.createComponent === 'function'
 
     if (tag === 'tabs' && hasOwnContentHost) {
@@ -118,5 +137,15 @@ export class ViewRendererComponent implements OnChanges {
     if (value === 'false') return false
     if (!isNaN(Number(value)) && value.trim() !== '') return Number(value)
     return value
+  }
+
+  // Serialize child nodes of an XML element to string
+  private serializeInnerXml(el: Element): string {
+    const serializer = new XMLSerializer()
+    let xml = ''
+    el.childNodes.forEach((n: Node) => {
+      xml += serializer.serializeToString(n)
+    })
+    return xml
   }
 }
