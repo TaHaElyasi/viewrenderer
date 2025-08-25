@@ -2,6 +2,7 @@ import { Component, Input, OnChanges, SimpleChanges, ViewChild, ViewContainerRef
 import { CommonModule } from '@angular/common'
 import { WidgetRegistryService } from '../services/widget-registry.service'
 import { XmlParserService } from '../services/xml-parser.service'
+import { LazyRenderComponent } from '../widgets/lazy-render.component'
 
 @Component({
   selector: 'app-view-renderer',
@@ -67,6 +68,29 @@ export class ViewRendererComponent implements OnChanges {
     if (node.nodeType !== Node.ELEMENT_NODE) return
     const el = node as Element
     const tag = el.tagName.toLowerCase()
+
+    // Build attrs early to detect lazy configuration
+    const attrs: Record<string, any> = {}
+    for (const attr of Array.from(el.attributes)) {
+      const camel = this.kebabToCamel(attr.name)
+      const coerced = this.coerce(attr.value)
+      attrs[attr.name] = coerced
+      attrs[camel] = coerced
+    }
+
+    // Lazy loading: if configured, defer rendering using LazyRenderComponent
+    const lazy = !!(attrs['lazy'] ?? attrs['lazyLoad'] ?? attrs['lazy-load'])
+    if (lazy) {
+      const lazyRef = container.createComponent(LazyRenderComponent)
+      // Optional override for delay; default 2000ms
+      const delay = typeof attrs['lazyDelay'] === 'number' ? attrs['lazyDelay'] : (typeof attrs['lazy-delay'] === 'number' ? attrs['lazy-delay'] : 2000)
+      try { lazyRef.setInput('delayMs', delay) } catch {}
+      // Pass element XML without lazy attributes to avoid double lazy wrapping
+      const fullXml = this.serializeElementXmlWithoutLazy(el)
+      try { lazyRef.setInput('xml', fullXml) } catch {}
+      return
+    }
+
     const comp = this.widgets.get(tag)
     if (!comp) {
       const LabelComp = this.widgets.get('label')
@@ -78,15 +102,6 @@ export class ViewRendererComponent implements OnChanges {
     }
 
     const compRef = container.createComponent(comp)
-
-    // Build a generic attrs object from raw attributes (keep both raw and camel for flexibility)
-    const attrs: Record<string, any> = {}
-    for (const attr of Array.from(el.attributes)) {
-      const camel = this.kebabToCamel(attr.name)
-      const coerced = this.coerce(attr.value)
-      attrs[attr.name] = coerced
-      attrs[camel] = coerced
-    }
 
     // Check if this widget is atomic
     const isAtomic = this.widgets.isAtomic(tag)
@@ -147,5 +162,23 @@ export class ViewRendererComponent implements OnChanges {
       xml += serializer.serializeToString(n)
     })
     return xml
+  }
+
+  // Serialize the element itself (including its start/end tags and children)
+  private serializeElementXml(el: Element): string {
+    const serializer = new XMLSerializer()
+    return serializer.serializeToString(el)
+  }
+
+  // Serialize element but remove lazy-related attributes to prevent nested lazy wrappers
+  private serializeElementXmlWithoutLazy(el: Element): string {
+    const clone = el.cloneNode(true) as Element
+    clone.removeAttribute('lazy')
+    clone.removeAttribute('lazy-load')
+    clone.removeAttribute('lazyLoad')
+    clone.removeAttribute('lazyDelay')
+    clone.removeAttribute('lazy-delay')
+    const serializer = new XMLSerializer()
+    return serializer.serializeToString(clone)
   }
 }
