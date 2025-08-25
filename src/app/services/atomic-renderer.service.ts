@@ -1,7 +1,17 @@
-import { Injectable, ViewContainerRef, inject } from '@angular/core';
+import { Injectable, ViewContainerRef, inject, Component, Input } from '@angular/core';
 import { WidgetRegistryService } from './widget-registry.service';
 import { XmlParserService } from './xml-parser.service';
 import { LazyRenderComponent } from '../widgets/lazy-render.component';
+
+// Internal lightweight component to render plain text nodes without relying on any widget
+@Component({
+  selector: 'internal-text-node',
+  standalone: true,
+  template: `{{ text }}`,
+})
+class InternalTextNodeComponent {
+  @Input() text: string = '';
+}
 
 @Injectable({ providedIn: 'root' })
 export class AtomicRendererService {
@@ -14,11 +24,9 @@ export class AtomicRendererService {
 
     const result = this.xmlParser.parse(xmlContent);
     if (result.error) {
-      const LabelComp = this.widgets.get('label');
-      if (LabelComp) {
-        const compRef = container.createComponent(LabelComp);
-        compRef.setInput('attrs', { text: 'XML نامعتبر: ' + result.error, color: '#b91c1c' });
-      }
+      // Avoid dependency on a specific widget; just render error text plainly
+      const errRef = container.createComponent(InternalTextNodeComponent);
+      try { errRef.setInput('text', 'XML نامعتبر: ' + result.error); } catch {}
       return;
     }
 
@@ -30,11 +38,8 @@ export class AtomicRendererService {
     if (node.nodeType === Node.TEXT_NODE) {
       const text = (node.textContent || '').trim();
       if (text) {
-        const LabelComp = this.widgets.get('label');
-        if (LabelComp) {
-          const labelRef = container.createComponent(LabelComp);
-          labelRef.setInput('attrs', { text });
-        }
+        const textRef = container.createComponent(InternalTextNodeComponent);
+        try { textRef.setInput('text', text); } catch {}
       }
       return;
     }
@@ -66,17 +71,12 @@ export class AtomicRendererService {
 
     const comp = this.widgets.get(tag);
     if (!comp) {
-      const LabelComp = this.widgets.get('label');
-      if (LabelComp) {
-        const labelRef = container.createComponent(LabelComp);
-        labelRef.setInput('attrs', { text: `ناشناخته: <${tag}>`, color: '#b45309' });
-      }
+      // No registered component; render children (flatten unknown tag) to keep renderer generic
+      Array.from(el.childNodes).forEach(ch => this.renderNode(ch, container));
       return;
     }
 
     const compRef = container.createComponent(comp);
-
-    // Build attrs object already built above
 
     // Check if this widget is atomic
     const isAtomic = this.widgets.isAtomic(tag);
@@ -109,11 +109,7 @@ export class AtomicRendererService {
     // Render children for non-atomic widgets
     const hasOwnContentHost = instance && instance.contentHost && typeof instance.contentHost.createComponent === 'function';
 
-    if (tag === 'tabs' && hasOwnContentHost) {
-      Array.from(el.childNodes).forEach(ch => this.renderNode(ch, instance.contentHost));
-      return;
-    }
-
+    // Generic handling: if component exposes a contentHost, use it; otherwise, use current container
     const childContainer: ViewContainerRef = hasOwnContentHost ? instance.contentHost : container;
     Array.from(el.childNodes).forEach(ch => this.renderNode(ch, childContainer));
   }
