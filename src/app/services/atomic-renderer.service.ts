@@ -1,4 +1,4 @@
-import { Injectable, ViewContainerRef, inject } from '@angular/core';
+import { Injectable, ViewContainerRef, inject, Injector, EnvironmentInjector } from '@angular/core';
 import { WidgetRegistryService } from './widget-registry.service';
 import { XmlParserService } from './xml-parser.service';
 import { LazyRenderComponent } from '../widgets/lazy-render.component';
@@ -8,7 +8,11 @@ export class AtomicRendererService {
   private widgets = inject(WidgetRegistryService);
   private xmlParser = inject(XmlParserService);
 
-  renderXmlContent(xmlContent: string, container: ViewContainerRef): void {
+  renderXmlContent(
+    xmlContent: string,
+    container: ViewContainerRef,
+    options?: { injector?: Injector; environmentInjector?: EnvironmentInjector; context?: any }
+  ): void {
     container.clear();
     if (!xmlContent?.trim()) return;
 
@@ -16,24 +20,36 @@ export class AtomicRendererService {
     if (result.error) {
       const LabelComp = this.widgets.get('label');
       if (LabelComp) {
-        const compRef = container.createComponent(LabelComp);
-        compRef.setInput('attrs', { text: 'XML نامعتبر: ' + result.error, color: '#b91c1c' });
+        const compRef = container.createComponent(LabelComp, {
+          injector: options?.injector,
+          environmentInjector: options?.environmentInjector
+        });
+        try { compRef.setInput('attrs', { text: 'XML نامعتبر: ' + result.error, color: '#b91c1c' }); } catch {}
+        try { compRef.setInput('context' as any, options?.context); } catch {}
       }
       return;
     }
 
     const root = result.root!;
-    Array.from(root.childNodes).forEach(node => this.renderNode(node, container));
+    Array.from(root.childNodes).forEach(node => this.renderNode(node, container, options));
   }
 
-  private renderNode(node: Node, container: ViewContainerRef): void {
+  private renderNode(
+    node: Node,
+    container: ViewContainerRef,
+    options?: { injector?: Injector; environmentInjector?: EnvironmentInjector; context?: any }
+  ): void {
     if (node.nodeType === Node.TEXT_NODE) {
       const text = (node.textContent || '').trim();
       if (text) {
         const LabelComp = this.widgets.get('label');
         if (LabelComp) {
-          const labelRef = container.createComponent(LabelComp);
-          labelRef.setInput('attrs', { text });
+          const labelRef = container.createComponent(LabelComp, {
+            injector: options?.injector,
+            environmentInjector: options?.environmentInjector
+          });
+          try { labelRef.setInput('attrs', { text }); } catch {}
+          try { labelRef.setInput('context' as any, options?.context); } catch {}
         }
       }
       return;
@@ -55,12 +71,18 @@ export class AtomicRendererService {
     // Lazy loading: if configured, defer rendering using LazyRenderComponent
     const lazy = !!(attrs['lazy'] ?? attrs['lazyLoad'] ?? attrs['lazy-load']);
     if (lazy) {
-      const lazyRef = container.createComponent(LazyRenderComponent);
+      const lazyRef = container.createComponent(LazyRenderComponent, {
+        injector: options?.injector,
+        environmentInjector: options?.environmentInjector
+      });
       const delay = typeof attrs['lazyDelay'] === 'number' ? attrs['lazyDelay'] : (typeof attrs['lazy-delay'] === 'number' ? attrs['lazy-delay'] : 2000);
       try { lazyRef.setInput('delayMs', delay); } catch {}
       // Pass element XML without lazy attributes to prevent double wrapping
       const fullXml = this.serializeElementXmlWithoutLazy(el);
       try { lazyRef.setInput('xml', fullXml); } catch {}
+      try { lazyRef.setInput('context' as any, options?.context); } catch {}
+      try { lazyRef.setInput('injector' as any, options?.injector); } catch {}
+      try { lazyRef.setInput('environmentInjector' as any, options?.environmentInjector); } catch {}
       return;
     }
 
@@ -68,27 +90,35 @@ export class AtomicRendererService {
     if (!comp) {
       const LabelComp = this.widgets.get('label');
       if (LabelComp) {
-        const labelRef = container.createComponent(LabelComp);
-        labelRef.setInput('attrs', { text: `ناشناخته: <${tag}>`, color: '#b45309' });
+        const labelRef = container.createComponent(LabelComp, {
+          injector: options?.injector,
+          environmentInjector: options?.environmentInjector
+        });
+        try { labelRef.setInput('attrs', { text: `ناشناخته: <${tag}>`, color: '#b45309' }); } catch {}
+        try { labelRef.setInput('context' as any, options?.context); } catch {}
       }
       return;
     }
 
-    const compRef = container.createComponent(comp);
-
-    // Build attrs object already built above
+    const compRef = container.createComponent(comp, {
+      injector: options?.injector,
+      environmentInjector: options?.environmentInjector
+    });
 
     // Check if this widget is atomic
     const isAtomic = this.widgets.isAtomic(tag);
-    
+
     // Pass attrs
     try { compRef.setInput('attrs' as any, attrs); } catch {}
-    
+
+    // Pass shared context
+    try { compRef.setInput('context' as any, options?.context); } catch {}
+
     // Set atomic properties
     const instance: any = compRef.instance as any;
     if (isAtomic && instance) {
       try { compRef.setInput('isAtomic' as any, true); } catch {}
-      
+
       // Use XMLSerializer to extract inner XML instead of el.innerHTML
       const innerXml = this.serializeInnerXml(el);
       if (innerXml.trim()) {
@@ -109,13 +139,8 @@ export class AtomicRendererService {
     // Render children for non-atomic widgets
     const hasOwnContentHost = instance && instance.contentHost && typeof instance.contentHost.createComponent === 'function';
 
-    if (tag === 'tabs' && hasOwnContentHost) {
-      Array.from(el.childNodes).forEach(ch => this.renderNode(ch, instance.contentHost));
-      return;
-    }
-
     const childContainer: ViewContainerRef = hasOwnContentHost ? instance.contentHost : container;
-    Array.from(el.childNodes).forEach(ch => this.renderNode(ch, childContainer));
+    Array.from(el.childNodes).forEach(ch => this.renderNode(ch, childContainer, options));
   }
 
   private kebabToCamel(str: string): string {

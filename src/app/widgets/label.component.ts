@@ -18,6 +18,7 @@ export class LabelComponent implements WidgetComponent {
   @Input() text: string = '';
   @Input() color?: string;
   @Input() attrs?: Record<string, any>;
+  @Input() context?: any;
 
   @ViewChild('contentHost', { read: ViewContainerRef, static: true })
   public contentHost!: ViewContainerRef;

@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, SimpleChanges, ViewChild, ViewContainerRef } from '@angular/core'
+import { Component, Input, OnChanges, SimpleChanges, ViewChild, ViewContainerRef, Injector, EnvironmentInjector } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { AtomicRendererService } from '../services/atomic-renderer.service'
 
@@ -17,6 +17,9 @@ import { AtomicRendererService } from '../services/atomic-renderer.service'
 })
 export class ViewRendererComponent implements OnChanges {
   @Input() xml: string = ''
+  @Input() context?: any
+  @Input() injector?: Injector
+  @Input() environmentInjector?: EnvironmentInjector
 
   @ViewChild('host', { read: ViewContainerRef, static: true })
   private host!: ViewContainerRef
@@ -24,8 +27,12 @@ export class ViewRendererComponent implements OnChanges {
   constructor(private readonly atomicRenderer: AtomicRendererService) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['xml']) {
-      this.atomicRenderer.renderXmlContent(this.xml, this.host)
+    if (changes['xml'] || changes['context'] || changes['injector'] || changes['environmentInjector']) {
+      this.atomicRenderer.renderXmlContent(this.xml, this.host, {
+        injector: this.injector,
+        environmentInjector: this.environmentInjector,
+        context: this.context
+      })
     }
   }
 }

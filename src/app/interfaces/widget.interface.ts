@@ -4,6 +4,9 @@ export interface WidgetComponent {
   // Generic attributes object that all widgets can use
   attrs?: Record<string, any>;
   
+  // Optional shared context passed from ViewRenderer/AtomicRenderer
+  context?: any;
+  
   // Content host for nested components (optional)
   contentHost?: ViewContainerRef;
   
