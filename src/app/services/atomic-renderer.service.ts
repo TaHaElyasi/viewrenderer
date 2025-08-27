@@ -3,6 +3,12 @@ import { WidgetRegistryService } from './widget-registry.service';
 import { XmlParserService } from './xml-parser.service';
 import { LazyRenderComponent } from '../widgets/lazy-render.component';
 
+export interface RendererHooks {
+  onFormSubmit?: (event: { tag: string; attrs: Record<string, any>; value: any; key?: string }) => void;
+  onFormChange?: (event: { tag: string; attrs: Record<string, any>; value: any; key?: string }) => void;
+  onInputChange?: (event: { tag: string; attrs: Record<string, any>; name?: string; value: any }) => void;
+}
+
 // Internal lightweight component to render plain text nodes without relying on any widget
 @Component({
   selector: 'internal-text-node',
@@ -17,6 +23,16 @@ class InternalTextNodeComponent {
 export class AtomicRendererService {
   private widgets = inject(WidgetRegistryService);
   private xmlParser = inject(XmlParserService);
+  private hooks?: RendererHooks;
+
+  // counter used to assign implicit keys to forms without id/name
+  private formAutoInc = 0;
+
+  setHooks(hooks?: RendererHooks) {
+    this.hooks = hooks;
+    // reset counter on new render cycle via setHooks caller
+    this.formAutoInc = 0;
+  }
 
   renderXmlContent(xmlContent: string, container: ViewContainerRef): void {
     container.clear();
@@ -94,6 +110,41 @@ export class AtomicRendererService {
       if (innerXml.trim()) {
         try { compRef.setInput('xmlContent' as any, innerXml); } catch {}
       }
+    }
+
+    // Wire up well-known outputs for specific widgets (e.g., form)
+    if (tag === 'form') {
+      const submitted = (instance && instance.submitted) || (compRef as any).submitted;
+      const valueChange = (instance && instance.valueChange) || (compRef as any).valueChange;
+      const key = (attrs['id'] ?? attrs['name'] ?? `form_${++this.formAutoInc}`) as string;
+      if (submitted && typeof submitted.subscribe === 'function' && this.hooks?.onFormSubmit) {
+        try { submitted.subscribe((payload: any) => this.hooks?.onFormSubmit?.({ tag, attrs, value: payload, key })); } catch {}
+      }
+      if (valueChange && typeof valueChange.subscribe === 'function' && this.hooks?.onFormChange) {
+        try { valueChange.subscribe((payload: any) => this.hooks?.onFormChange?.({ tag, attrs, value: payload, key })); } catch {}
+      }
+    }
+
+    // Generic subscription for input-like widgets or any widget exposing 'changed' or 'valueChange'
+    const changed = (instance && instance.changed) || (compRef as any).changed;
+    if (changed && typeof changed.subscribe === 'function' && this.hooks?.onInputChange) {
+      try {
+        changed.subscribe((payload: any) => {
+          const value = typeof payload === 'object' && payload && 'value' in payload ? payload.value : payload;
+          const name = (typeof payload === 'object' && payload && 'name' in payload) ? payload.name : (attrs['name'] ?? undefined);
+          this.hooks?.onInputChange?.({ tag, attrs, name, value });
+        });
+      } catch {}
+    }
+    const valueChangeGeneric = (instance && instance.valueChange) || (compRef as any).valueChange;
+    if (valueChangeGeneric && typeof valueChangeGeneric.subscribe === 'function' && this.hooks?.onInputChange && tag !== 'form') {
+      try {
+        valueChangeGeneric.subscribe((payload: any) => {
+          const value = typeof payload === 'object' && payload && 'value' in payload ? payload.value : payload;
+          const name = (typeof payload === 'object' && payload && 'name' in payload) ? payload.name : (attrs['name'] ?? undefined);
+          this.hooks?.onInputChange?.({ tag, attrs, name, value });
+        });
+      } catch {}
     }
 
     // Set direct inputs for backward compatibility

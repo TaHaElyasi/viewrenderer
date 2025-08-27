@@ -5,6 +5,9 @@ import { CardComponent } from '../widgets/card.component';
 import { TabsComponent } from '../widgets/tabs.component';
 import { TabComponent } from '../widgets/tab.component';
 import { TableComponent } from '../widgets/table.component';
+import { FormComponent } from '../widgets/form.component';
+import { InputComponent } from '../widgets/input.component';
+import { SelectComponent } from '../widgets/select.component';
 
 interface WidgetRegistration {
   component: Type<any>;
@@ -26,6 +29,9 @@ export class WidgetRegistryService {
     this.register('tabs', TabsComponent, false);
     this.register('tab', TabComponent, true); // atomic widget
     this.register('table', TableComponent, false);
+    this.register('form', FormComponent, false);
+    this.register('input', InputComponent, false);
+    this.register('select', SelectComponent, false);
   }
 
   register(tag: string, component: Type<any>, isAtomic: boolean = false) {
