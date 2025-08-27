@@ -27,6 +27,7 @@ export class ButtonComponent implements WidgetComponent {
   @Input() label: string = 'دکمه';
   @Input() color?: string;
   @Input() attrs?: Record<string, any>;
+  @Input() context?: any;
   @Output() clicked = new EventEmitter<void>();
 
   @ViewChild('contentHost', { read: ViewContainerRef, static: true })

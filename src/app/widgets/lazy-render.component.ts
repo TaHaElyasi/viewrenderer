@@ -1,4 +1,4 @@
-import { Component, Input, ViewChild, ViewContainerRef, AfterViewInit, ElementRef, OnDestroy, inject } from '@angular/core';
+import { Component, Input, ViewChild, ViewContainerRef, AfterViewInit, ElementRef, OnDestroy, inject, Injector, EnvironmentInjector } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AtomicRendererService } from '../services/atomic-renderer.service';
 
@@ -25,12 +25,16 @@ import { AtomicRendererService } from '../services/atomic-renderer.service';
 export class LazyRenderComponent implements AfterViewInit, OnDestroy {
   @Input() xml?: string;
   @Input() delayMs: number = 2000; // default 2s delay after entering viewport
+  @Input() context?: any;
+  @Input() injector?: Injector;
+  @Input() environmentInjector?: EnvironmentInjector;
 
   @ViewChild('host', { read: ViewContainerRef, static: true })
   private host!: ViewContainerRef;
 
   private el = inject(ElementRef<HTMLElement>);
   private atomic = inject(AtomicRendererService);
+  private selfInjector = inject(Injector);
   private io?: IntersectionObserver;
   private timeoutId: any;
   rendered = false;
@@ -52,7 +56,11 @@ export class LazyRenderComponent implements AfterViewInit, OnDestroy {
         this.timeoutId = setTimeout(() => {
           // Render and clean up
           this.host.clear();
-          this.atomic.renderXmlContent(this.xml!, this.host);
+          this.atomic.renderXmlContent(this.xml!, this.host, {
+            injector: this.injector ?? this.selfInjector,
+            environmentInjector: this.environmentInjector,
+            context: this.context
+          });
           this.rendered = true;
           this.cleanup();
         }, this.delayMs);

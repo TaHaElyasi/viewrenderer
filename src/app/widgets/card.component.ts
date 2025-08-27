@@ -1,4 +1,4 @@
-import { Component, Input, ViewChild, ViewContainerRef, OnChanges, SimpleChanges, AfterViewInit, inject } from '@angular/core';
+import { Component, Input, ViewChild, ViewContainerRef, OnChanges, SimpleChanges, AfterViewInit, inject, Injector } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { WidgetComponent } from '../interfaces/widget.interface';
 import { AtomicRendererService } from '../services/atomic-renderer.service';
@@ -15,8 +15,10 @@ export class CardComponent implements WidgetComponent, OnChanges, AfterViewInit 
   @Input() attrs?: Record<string, any>;
   @Input() isAtomic?: boolean;
   @Input() xmlContent?: string;
+  @Input() context?: any;
 
   private atomicRenderer = inject(AtomicRendererService);
+  private injector = inject(Injector);
   private viewInitialized = false;
 
   @ViewChild('contentHost', { read: ViewContainerRef, static: true })
@@ -45,7 +47,10 @@ export class CardComponent implements WidgetComponent, OnChanges, AfterViewInit 
   private renderAtomicContent(): void {
     if (this.contentHost && this.xmlContent) {
       this.contentHost.clear();
-      this.atomicRenderer.renderXmlContent(this.xmlContent, this.contentHost);
+      this.atomicRenderer.renderXmlContent(this.xmlContent, this.contentHost, {
+        injector: this.injector,
+        context: this.context
+      });
     }
   }
 }
