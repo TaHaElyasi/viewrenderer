@@ -13,7 +13,6 @@ import { AtomicRendererService } from '../services/atomic-renderer.service';
 })
 export class TabComponent implements OnInit, OnDestroy, OnChanges, AfterViewInit, WidgetComponent {
   @Input() label: string = '';
-  @Input() active: boolean = false;
   @Input() attrs?: Record<string, any>;
   @Input() isAtomic?: boolean;
   @Input() xmlContent?: string;
@@ -24,6 +23,21 @@ export class TabComponent implements OnInit, OnDestroy, OnChanges, AfterViewInit
   private parentTabs = inject(TabsComponent, { optional: true });
   private atomicRenderer = inject(AtomicRendererService);
   private viewInitialized = false;
+  private hasRendered = false;
+  private _active: boolean = false;
+
+  @Input()
+  get active(): boolean {
+    return this._active;
+  }
+  set active(val: boolean) {
+    const becameActive = !!val && !this._active;
+    this._active = !!val;
+    // When tab becomes active for the first time after view init, render its atomic content once
+    if (becameActive && this.viewInitialized && this.isAtomic && this.xmlContent && !this.hasRendered) {
+      this.renderAtomicContent();
+    }
+  }
 
   ngOnInit(): void {
     // Sync from attrs on start
@@ -41,22 +55,24 @@ export class TabComponent implements OnInit, OnDestroy, OnChanges, AfterViewInit
       if (typeof this.attrs['active'] === 'boolean') this.active = this.attrs['active'];
     }
     
+    // If XML content or atomic flag changes and we've already rendered before, re-render
     if (this.viewInitialized && this.isAtomic && this.xmlContent && (changes['xmlContent'] || changes['isAtomic'])) {
-      this.renderAtomicContent();
+      this.renderAtomicContent(true);
     }
   }
 
-  private renderAtomicContent(): void {
-    if (this.contentHost && this.xmlContent) {
-      this.contentHost.clear();
-      this.atomicRenderer.renderXmlContent(this.xmlContent, this.contentHost);
-    }
+  private renderAtomicContent(force: boolean = false): void {
+    if (!this.contentHost || !this.xmlContent) return;
+    if (this.hasRendered && !force) return;
+    this.contentHost.clear();
+    this.atomicRenderer.renderXmlContent(this.xmlContent, this.contentHost);
+    this.hasRendered = true;
   }
 
   ngAfterViewInit(): void {
     this.viewInitialized = true;
-    // Render atomic content after view is initialized (next tick to avoid ExpressionChanged)
-    if (this.isAtomic && this.xmlContent) {
+    // Render atomic content after view is initialized only if this tab is active
+    if (this.isAtomic && this.xmlContent && this.active && !this.hasRendered) {
       Promise.resolve().then(() => this.renderAtomicContent());
     }
   }

@@ -226,4 +226,26 @@ export class AppComponent {
 <card title="کارت لِیزی ۲ (پایین صفحه)" lazy="true">
   <label text="این کارت باید فقط بعد از اسکرول طولانی و ۲ ثانیه تاخیر ظاهر شود" color="#ef4444"></label>
 </card>`;
+ exampleHttp: string = `<card title="داده‌ها از وب‌سرویس">
+  <tabs activeIndex="1">
+    <tab label="کاربران">
+      <card title="لیست کاربران (JSONPlaceholder)">
+        <table lazy="true" url="https://jsonplaceholder.typicode.com/users" columns="name,email,company.name"></table>
+      </card>
+    </tab>
+    <tab label="توضیحات">
+      <card title="درباره">
+        <label text="این تب شامل یک جدول است که داده‌ها را با HttpClient از یک وب‌سرویس عمومی می‌خواند."></label>
+      </card>
+    </tab>
+    <tab label="کاربران">
+      <card title="لیست کاربران (JSONPlaceholder)">
+        <table url="https://jsonplaceholder.typicode.com/users" columns="name,email,company.name"></table>
+      </card>
+    </tab>
+  </tabs>
+</card>` 
 }
+
+
+
