@@ -1,11 +1,12 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 import { ViewRendererComponent } from './view-renderer/view-renderer.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [FormsModule, ViewRendererComponent],
+  imports: [FormsModule, CommonModule, ViewRendererComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
@@ -146,7 +147,7 @@ export class AppComponent {
   <button label="اکشن کارت" color="#10b981"></button>
 </card>
 
-<!-- فیلر زیاد برای اسکرول طولانی بین ویجت‌های لِیزی -->
+<!-- فیلر زیاد برای اسکرول طولانی برای اتماعده و از اسکرول طولانی بین ویجت‌های لِیزی -->
 <card title="فهرست طولانی ۲">
   <label text="آیتم ۵۱"></label>
   <label text="آیتم ۵۲"></label>
@@ -225,12 +226,15 @@ export class AppComponent {
 <!-- سومین ویجت لِیزی: کارت پایین صفحه -->
 <card title="کارت لِیزی ۲ (پایین صفحه)" lazy="true">
   <label text="این کارت باید فقط بعد از اسکرول طولانی و ۲ ثانیه تاخیر ظاهر شود" color="#ef4444"></label>
-</card>`;
- exampleHttp: string = `<card title="داده‌ها از وب‌سرویس">
+</card>
+`;
+
+  exampleHttp: string = `
+<card title="داده‌ها از وب‌سرویس">
   <tabs activeIndex="1">
     <tab label="کاربران">
       <card title="لیست کاربران (JSONPlaceholder)">
-        <table lazy="true" url="https://jsonplaceholder.typicode.com/users" columns="name,email,company.name"></table>
+        <table url="https://jsonplaceholder.typicode.com/users" columns="name,email,company.name"></table>
       </card>
     </tab>
     <tab label="توضیحات">
@@ -238,13 +242,78 @@ export class AppComponent {
         <label text="این تب شامل یک جدول است که داده‌ها را با HttpClient از یک وب‌سرویس عمومی می‌خواند."></label>
       </card>
     </tab>
-    <tab label="کاربران">
-      <card title="لیست کاربران (JSONPlaceholder)">
-        <table url="https://jsonplaceholder.typicode.com/users" columns="name,email,company.name"></table>
-      </card>
-    </tab>
   </tabs>
-</card>` 
+</card>`;
+
+  exampleForm: string = `
+<card title="فرم ثبت‌نام">
+  <form submitLabel="ارسال">
+    <input name="firstName" label="نام" required="true" placeholder="علی"></input>
+    <input name="lastName" label="نام خانوادگی" required="true" placeholder="رضایی"></input>
+    <input name="email" label="ایمیل" type="email" required="true" placeholder="example@mail.com"></input>
+    <select name="role" label="نقش" required="true" options='مدیر:admin|کاربر:user|مهمان:guest'></select>
+  </form>
+</card>`;
+
+  // Examples for sidebar buttons
+  exampleLabel: string = `
+<label text="یک لیبل ساده" color="#0ea5e9"></label>`;
+
+  exampleButton: string = `
+<button label="کلیک کن" color="#16a34a"></button>`;
+
+  exampleTable: string = this.exampleHttp;
+
+  exampleMultiForm: string = `
+<card title="چند فرم در یک صفحه">
+  <form name="profileForm" submitLabel="ثبت پروفایل">
+    <input name="firstName" label="نام" required="true"></input>
+    <input name="lastName" label="نام خانوادگی" required="true"></input>
+  </form>
+  <form name="accountForm" submitLabel="ثبت حساب">
+    <input name="username" label="نام کاربری" required="true"></input>
+    <select name="role" label="نقش" options="مدیر:admin|کاربر:user"></select>
+  </form>
+</card>`;
+
+  exampleInputsOutsideForm: string = `
+<card title="اینپوت‌های مستقل (خارج از فرم)">
+  <input name="city" label="شهر" placeholder="تهران"></input>
+  <select name="language" label="زبان" options="فارسی:fa|انگلیسی:en"></select>
+</card>`;
+
+  exampleInputsInTabs: string = `
+<tabs>
+  <tab label="تب ۱">
+    <input name="tab1Field" label="فیلد تب ۱"></input>
+  </tab>
+  <tab label="تب ۲">
+    <form name="tab2Form" submitLabel="ارسال">
+      <input name="email" label="ایمیل" type="email" required="true"></input>
+    </form>
+  </tab>
+</tabs>`;
+
+  // Debug state
+  lastInputChange: any = null;
+  lastFormChange: any = null;
+  lastFormSubmit: any = null;
+  formLastChange: any = null; // backward compat
+  formLastSubmit: any = null; // backward compat
+
+  onFormChange(ev: any) { this.formLastChange = ev; this.lastFormChange = ev; }
+  onFormSubmit(ev: any) { this.formLastSubmit = ev; this.lastFormSubmit = ev; }
+  onInputChange(ev: any) { this.lastInputChange = ev; }
+
+  loadExample(key: string) {
+    const v = (this as any)[key];
+    if (typeof v === 'string') this.xml = v;
+  }
+
+  render() {
+    // force re-render by changing binding slightly
+    this.xml = this.xml + '\n';
+  }
 }
 
 

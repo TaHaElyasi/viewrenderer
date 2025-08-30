@@ -1,20 +1,31 @@
-<div class="container">
-  <div class="block">
-    <h3>XML ورودی</h3>
-    <div class="examples">
-      <button class="example-btn" (click)="xml = exampleSimple">مثال ساده</button>
-      <button class="example-btn" (click)="xml = exampleCard">کارت</button>
-      <button class="example-btn" (click)="xml = exampleTabs">تب‌ها</button>
-      <button class="example-btn" (click)="xml = exampleComplex">نمونه پیچیده</button>
-      <button class="example-btn" (click)="xml = exampleLazy">لیزی</button>
-      <button class="example-btn" (click)="xml = exampleHttp">جدول/وب‌سرویس</button>
-    </div>
-    <textarea [(ngModel)]="xml"></textarea>
+<div class="app">
+  <div class="sidebar">
+    <button (click)="loadExample('exampleCard')">Card</button>
+    <button (click)="loadExample('exampleLabel')">Label</button>
+    <button (click)="loadExample('exampleButton')">Button</button>
+    <button (click)="loadExample('exampleTabs')">Tabs</button>
+    <button (click)="loadExample('exampleLazy')">Lazy</button>
+    <button (click)="loadExample('exampleTable')">Table</button>
+    <button (click)="loadExample('exampleForm')">Form</button>
+    <button (click)="loadExample('exampleMultiForm')">Multi Form</button>
+    <button (click)="loadExample('exampleInputsOutsideForm')">Inputs Outside Form</button>
+    <button (click)="loadExample('exampleInputsInTabs')">Inputs In Tabs</button>
   </div>
-  <div class="block">
-    <h3>خروجی رندر شده</h3>
-    <div class="renderer">
-      <app-view-renderer [xml]="xml"></app-view-renderer>
+  <div class="main">
+    <textarea [(ngModel)]="xml" rows="10" style="width: 100%;"></textarea>
+    <div class="actions">
+      <button (click)="render()">Render XML</button>
+    </div>
+
+    <div class="output">
+      <app-view-renderer [xml]="xml" (formChange)="onFormChange($event)" (formSubmit)="onFormSubmit($event)" (inputChange)="onInputChange($event)"></app-view-renderer>
+    </div>
+
+    <div class="debug">
+      <h3>Debug</h3>
+      <pre>Last input change: {{ lastInputChange | json }}</pre>
+      <pre>Last form change: {{ lastFormChange | json }}</pre>
+      <pre>Last form submit: {{ lastFormSubmit | json }}</pre>
     </div>
   </div>
 </div>
