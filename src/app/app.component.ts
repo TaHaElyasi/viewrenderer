@@ -294,6 +294,91 @@ export class AppComponent {
   </tab>
 </tabs>`;
 
+exampleMenu: string = `
+<menu>
+<row>
+<menu-section id="info" title="مشخصات فردی">
+    <card title="مشخصات فردی">
+      <label text="نام" ></label>
+      <label text="نام خانوادگی"></label>
+      <label text="شرح حال"></label>
+    </card>
+  </menu-section>
+  </row>
+  <row>
+<menu-section id="family20" title="مشخصات خانواده">
+    <card title="مشخصات خانواده">
+      <label text="والدین"></label>
+      <label text="تعداد اعضا"></label>
+    </card>
+  </menu-section>
+  </row>
+  <row>
+<menu-section id="family21" title="مشخصات خانواده">
+    <card title="مشخصات خانواده">
+      <label text="والدین"></label>
+      <label text="تعداد اعضا"></label>
+    </card>
+  </menu-section>
+  </row>
+  <row>
+<menu-section id="family22" title="مشخصات خانواده">
+    <card title="مشخصات خانواده">
+      <label text="والدین"></label>
+      <label text="تعداد اعضا"></label>
+    </card>
+  </menu-section>
+  </row>
+  <row>
+<menu-section id="family23" title="مشخصات خانواده">
+    <card title="مشخصات خانواده">
+      <label text="والدین"></label>
+      <label text="تعداد اعضا"></label>
+    </card>
+  </menu-section>
+  </row>
+  <row>
+<menu-section id="family24" title="مشخصات خانواده">
+    <card title="مشخصات خانواده">
+      <label text="والدین"></label>
+      <label text="تعداد اعضا"></label>
+    </card>
+  </menu-section>
+  </row>
+  <row>
+<menu-section id="family25" title="مشخصات خانواده">
+    <card title="مشخصات خانواده">
+      <label text="والدین"></label>
+      <label text="تعداد اعضا"></label>
+    </card>
+  </menu-section>
+  </row>
+  <row>
+<menu-section id="family26" title="مشخصات خانواده">
+    <card title="مشخصات خانواده">
+      <label text="والدین"></label>
+      <label text="تعداد اعضا"></label>
+    </card>
+  </menu-section>
+  </row>
+<row><menu-section id="other" title="سایر">
+    <tabs>
+      <tab label="تب اول">
+        <card title="نمونه تب">
+          <label text="داخل تب هم کار می‌کند."></label>
+        </card>
+      </tab>
+      <tab label="تب دوم">
+        <card title="بخش دوم">
+          <label text="اسکرول و اسکرول‌اسپای فعال است."></label>
+        </card>
+      </tab>
+    </tabs>
+  </menu-section>
+  </row>
+</menu>
+`
+
   // Debug state
   lastInputChange: any = null;
   lastFormChange: any = null;

@@ -152,16 +152,20 @@ export class AtomicRendererService {
       try { compRef.setInput(key as any, attrs[key]); } catch {}
     }
 
+    // Ensure view is initialized so @ViewChild (e.g., contentHost) becomes available
+    try { compRef.changeDetectorRef.detectChanges(); } catch {}
+
     // For atomic widgets, don't render children here
     if (isAtomic) {
       return;
     }
 
     // Render children for non-atomic widgets
-    const hasOwnContentHost = instance && instance.contentHost && typeof instance.contentHost.createComponent === 'function';
+    const refreshedInstance: any = compRef.instance as any;
+    const hasOwnContentHost = refreshedInstance && refreshedInstance.contentHost && typeof refreshedInstance.contentHost.createComponent === 'function';
 
     // Generic handling: if component exposes a contentHost, use it; otherwise, use current container
-    const childContainer: ViewContainerRef = hasOwnContentHost ? instance.contentHost : container;
+    const childContainer: ViewContainerRef = hasOwnContentHost ? refreshedInstance.contentHost : container;
     Array.from(el.childNodes).forEach(ch => this.renderNode(ch, childContainer));
   }
 

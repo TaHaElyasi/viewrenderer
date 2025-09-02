@@ -1,0 +1,14 @@
+:host {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+@media (max-width: 1024px) {
+  :host {
+    flex-direction: column;
+  }
+}
