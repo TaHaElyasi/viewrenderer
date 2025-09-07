@@ -8,8 +8,11 @@ import { AtomicRendererService } from '../services/atomic-renderer.service';
   selector: 'app-tab',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './tab.component.html',
-  styleUrls: ['./tab.component.css']
+  template: `
+    <div [class.hidden]="!active">
+      <ng-container #contentHost></ng-container>
+    </div>
+  `
 })
 export class TabComponent implements OnInit, OnDestroy, OnChanges, AfterViewInit, WidgetComponent {
   @Input() label: string = '';

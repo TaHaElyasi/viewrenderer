@@ -8,46 +8,34 @@ import { WidgetComponent } from '../interfaces/widget.interface';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="ui-data-table">
-      <div class="header">
-        <div class="title">{{ attrs?.['title'] || title || 'Data Table' }}</div>
-        <div class="actions">
-          <button class="refresh" (click)="fetchIfPossible()" [disabled]="loading">{{ loading ? 'در حال بارگذاری...' : 'بروزرسانی' }}</button>
+    <div class="border border-base-300 rounded-xl shadow-sm overflow-hidden">
+      <div class="flex items-center justify-between px-4 py-3 bg-base-200 border-b border-base-300">
+        <div class="font-semibold text-base-content">{{ attrs?.['title'] || title || 'Data Table' }}</div>
+        <div class="flex gap-2">
+          <button class="btn btn-primary btn-sm" (click)="contextRefreshPossible()" [disabled]="loading">{{ loading ? 'در حال بارگذاری...' : 'بروزرسانی' }}</button>
         </div>
       </div>
 
-      <div *ngIf="error" class="error">{{ error }}</div>
+      <div *ngIf="error" class="text-error px-4 py-3">{{ error }}</div>
 
-      <table *ngIf="!error" class="table">
-        <thead>
-          <tr>
-            <th *ngFor="let col of displayColumns">{{ columnLabel(col) }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let row of data">
-            <td *ngFor="let col of displayColumns">{{ resolveCell(row, col) }}</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="overflow-x-auto">
+        <table *ngIf="!error" class="table w-full">
+          <thead>
+            <tr>
+              <th *ngFor="let col of displayColumns" class="bg-base-200 text-base-content">{{ columnLabel(col) }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of data" class="hover">
+              <td *ngFor="let col of displayColumns">{{ resolveCell(row, col) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-      <div *ngIf="!loading && !error && (!data || data.length === 0)" class="empty">داده‌ای برای نمایش موجود نیست</div>
+      <div *ngIf="!loading && !error && (!data || data.length === 0)" class="px-4 py-3 text-base-content/60">داده‌ای برای نمایش موجود نیست</div>
     </div>
-  `,
-  styles: [`
-    .ui-data-table { border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-    .header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
-    .title { font-weight: 600; color: #111827; }
-    .actions { display: flex; gap: 8px; }
-    .refresh { background: #6366f1; color: white; border: none; padding: 6px 10px; border-radius: 8px; cursor: pointer; font-weight: 600; }
-    .refresh:disabled { opacity: 0.6; cursor: default; }
-    .table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; text-align: left; }
-    thead th { background: #eef2ff; color: #3730a3; }
-    tbody tr:hover { background: #fafafa; }
-    .error { color: #b91c1c; padding: 12px; }
-    .empty { padding: 12px; color: #6b7280; }
-  `]
+  `
 })
 export class TableComponent implements OnInit, OnChanges, WidgetComponent {
   @Input() url?: string;
@@ -64,13 +52,13 @@ export class TableComponent implements OnInit, OnChanges, WidgetComponent {
 
   ngOnInit(): void {
     this.syncFromInputs();
-    this.fetchIfPossible();
+    this.contextRefreshPossible();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['attrs'] || changes['url'] || changes['columns']) {
       this.syncFromInputs();
-      this.fetchIfPossible();
+      this.contextRefreshPossible();
     }
   }
 
@@ -90,7 +78,7 @@ export class TableComponent implements OnInit, OnChanges, WidgetComponent {
     }
   }
 
-  fetchIfPossible(): void {
+  contextRefreshPossible(): void {
     if (!this.url) return;
     this.loading = true;
     this.error = undefined;

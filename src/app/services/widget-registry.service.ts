@@ -8,6 +8,11 @@ import { TableComponent } from '../widgets/table.component';
 import { FormComponent } from '../widgets/form.component';
 import { InputComponent } from '../widgets/input.component';
 import { SelectComponent } from '../widgets/select.component';
+import { MenuComponent } from '../widgets/menu.component';
+import { MenuSectionComponent } from '../widgets/menu-section.component';
+import { RowComponent } from '../widgets/row/row.component';
+import { ColumnComponent } from '../widgets/column/column.component';
+import { ContextComponent } from '../widgets/context.component';
 
 interface WidgetRegistration {
   component: Type<any>;
@@ -32,6 +37,11 @@ export class WidgetRegistryService {
     this.register('form', FormComponent, false);
     this.register('input', InputComponent, false);
     this.register('select', SelectComponent, false);
+    this.register('row', RowComponent, true);
+    this.register('column', ColumnComponent, true);
+    this.register('menu', MenuComponent, true); // atomic widget
+    this.register('menu-section', MenuSectionComponent, false);
+    this.register('context', ContextComponent, true); // renamed from fetch-if
   }
 
   register(tag: string, component: Type<any>, isAtomic: boolean = false) {

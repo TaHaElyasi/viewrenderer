@@ -1,27 +1,17 @@
 import { Component, EventEmitter, Input, Output, ViewChild, ViewContainerRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { WidgetComponent } from '../interfaces/widget.interface';
 
 @Component({
   selector: 'ui-button',
   standalone: true,
+  imports: [CommonModule],
   template: `
-    <button class="ui-button" [style.background]="(attrs?.['color'] ?? color) || '#4f46e5'" (click)="clicked.emit()">
+    <button class="btn btn-primary font-semibold" [ngStyle]="{ background: (attrs?.['color'] ?? color) || undefined }" (click)="clicked.emit()">
       {{ attrs?.['label'] ?? label }}
     </button>
     <ng-container #contentHost></ng-container>
-  `,
-  styles: [`
-    .ui-button { 
-      color: white; 
-      border: none; 
-      padding: 8px 14px; 
-      border-radius: 8px; 
-      cursor: pointer; 
-      font-weight: 600; 
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    }
-    .ui-button:hover { filter: brightness(1.05); }
-  `]
+  `
 })
 export class ButtonComponent implements WidgetComponent {
   @Input() label: string = 'دکمه';

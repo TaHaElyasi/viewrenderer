@@ -7,8 +7,16 @@ import { AtomicRendererService } from '../services/atomic-renderer.service';
   selector: 'ui-card',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './card.component.html',
-  styleUrls: ['./card.component.css']
+  template: `
+    <div class="card bg-base-100 shadow-lg border border-base-300 rounded-xl">
+      <div class="card-header px-6 py-4 border-b border-base-300" *ngIf="title">
+        <h3 class="card-title text-lg font-semibold text-base-content">{{ title }}</h3>
+      </div>
+      <div class="card-body px-6 py-4">
+        <ng-container #contentHost></ng-container>
+      </div>
+    </div>
+  `
 })
 export class CardComponent implements WidgetComponent, OnChanges, AfterViewInit {
   @Input() title?: string;

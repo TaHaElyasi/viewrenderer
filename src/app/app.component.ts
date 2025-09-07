@@ -2,6 +2,9 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ViewRendererComponent } from './view-renderer/view-renderer.component';
+import { LoadingService } from './services/loading.service';
+import { map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -12,6 +15,13 @@ import { ViewRendererComponent } from './view-renderer/view-renderer.component';
 })
 export class AppComponent {
   title = 'viewrenderer';
+
+  // آیا هنوز صفحه در حال لود شدن است؟ (بر اساس شمارنده جهانی درخواست‌ها)
+  isLoading$: Observable<boolean>;
+
+  constructor(private loading: LoadingService) {
+    this.isLoading$ = this.loading.isLoading$.pipe(map(count => (count as unknown as number) > 0));
+  }
 
   xml: string = `
 <card title="نمونه کارت">
@@ -264,6 +274,47 @@ export class AppComponent {
 
   exampleTable: string = this.exampleHttp;
 
+  exampleContext: string = `
+  <menu>
+    <!-- مثال معتبر: استفاده از type users با حداقل یک رکورد -->
+    <context type="users" minCount="1">
+      <menu-section id="info" title="مشخصات فردی">
+          <card title="کاربران یافت شد">
+            <label text="نتیجه معتبر بود، این بخش رندر شد."></label>
+            <table url="https://jsonplaceholder.typicode.com/users" columns="name,email,company.name"></table>
+          </card>
+      </menu-section>
+    </context>
+
+    <!-- مثال نامعتبر: شرط سخت‌گیرانه روی تعداد -->
+    <context type="users" minCount="1000">
+      <menu-section id="too-many" title="کاربران (نامعتبر)">
+          <card title="این بخش نباید نمایش داده شود">
+            <label text="به خاطر minCount بالا، context جلوی رندر را می‌گیرد."></label>
+          </card>
+      </menu-section>
+    </context>
+
+    <!-- مثال با پارامترهای جستجو: search -->
+    <context type='search' postId="1" minCount="1">
+      <menu-section id="search" title="نتایججستجو (نمونه)">
+          <card title="کامنت‌های پست ۱">
+            <label text="جستجو موفق بود و حداقل یک نتیجه وجود دارد."></label>
+          </card>
+      </menu-section>
+    </context>
+
+    <!-- مثال POST: ایجاد پست جدید -->
+    <context type="createpost" title="foo" body="bar" userId="1">
+      <menu-section id="create-post" title="ساخت پست (POST)">
+          <card title="پست با موفقیت ایجاد شد">
+            <label text="درخواست POST موفق بود و آبجکت ساخته‌شده دریافت شد."></label>
+          </card>
+      </menu-section>
+    </context>
+  </menu>
+`;
+
   exampleMultiForm: string = `
 <card title="چند فرم در یک صفحه">
   <form name="profileForm" submitLabel="ثبت پروفایل">
@@ -293,6 +344,92 @@ export class AppComponent {
     </form>
   </tab>
 </tabs>`;
+
+exampleMenu: string = `
+<menu>
+
+  <menu-section id="info" title="مشخصات فردی">
+      <card title="مشخصات فردی">
+        <label text="نام" ></label>
+        <label text="نام خانوادگی"></label>
+        <label text="شرح حال"></label>
+      </card>
+    </menu-section>
+
+
+    <menu-section id="family20" title="مشخصات خانواده">
+        <card title="مشخصات خانواده">
+          <label text="والدین"></label>
+          <label text="تعداد اعضا"></label>
+        </card>
+      </menu-section>
+
+  <row>
+<menu-section id="family21" title="مشخصات خانواده">
+    <card title="مشخصات خانواده">
+      <label text="والدین"></label>
+      <label text="تعداد اعضا"></label>
+    </card>
+  </menu-section>
+  </row>
+  <row>
+<menu-section id="family22" title="مشخصات خانواده">
+    <card title="مشخصات خانواده">
+      <label text="والدین"></label>
+      <label text="تعداد اعضا"></label>
+    </card>
+  </menu-section>
+  </row>
+  <row>
+<menu-section id="family23" title="مشخصات خانواده">
+    <card title="مشخصات خانواده">
+      <label text="والدین"></label>
+      <label text="تعداد اعضا"></label>
+    </card>
+  </menu-section>
+  </row>
+  <row>
+<menu-section id="family24" title="مشخصات خانواده">
+    <card title="مشخصات خانواده">
+      <label text="والدین"></label>
+      <label text="تعداد اعضا"></label>
+    </card>
+  </menu-section>
+  </row>
+  <row>
+<menu-section id="family25" title="مشخصات خانواده">
+    <card title="مشخصات خانواده">
+      <label text="والدین"></label>
+      <label text="تعداد اعضا"></label>
+    </card>
+  </menu-section>
+  </row>
+  <row>
+<menu-section id="family26" title="مشخصات خانواده">
+    <card title="مشخصات خانواده">
+      <label text="والدین"></label>
+      <label text="تعداد اعضا"></label>
+    </card>
+  </menu-section>
+  </row>
+<row>
+<menu-section id="other" title="سایر">
+    <tabs>
+      <tab label="تب اول">
+        <card title="نمونه تب">
+          <label text="داخل تب هم کار می‌کند."></label>
+        </card>
+      </tab>
+      <tab label="تب دوم">
+        <card title="بخش دوم">
+          <label text="اسکرول و اسکرول‌اسپای فعال است."></label>
+        </card>
+      </tab>
+    </tabs>
+  </menu-section>
+  </row>
+</menu>
+`
 
   // Debug state
   lastInputChange: any = null;

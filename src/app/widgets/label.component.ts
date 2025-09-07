@@ -5,14 +5,11 @@ import { WidgetComponent } from '../interfaces/widget.interface';
   selector: 'ui-label',
   standalone: true,
   template: `
-    <span [style.color]="attrs?.['color'] ?? color" class="ui-label">
+    <span class="text-sm leading-6" [style.color]="attrs?.['color'] ?? color">
       {{ attrs?.['text'] ?? text }}
     </span>
     <ng-container #contentHost></ng-container>
-  `,
-  styles: [`
-    .ui-label { font-size: 14px; line-height: 1.5; }
-  `]
+  `
 })
 export class LabelComponent implements WidgetComponent {
   @Input() text: string = '';
