@@ -4,6 +4,8 @@ import { AtomicRendererService } from '../services/atomic-renderer.service';
 import { LoadingService } from '../services/loading.service';
 import { FetchHttpService } from '../services/fetch-http.service';
 import { TypeRegistryService } from '../services/type-registry.service';
+import { RepoRegistryService } from '../services/repo-registry.service';
+import { lastValueFrom } from 'rxjs';
 
 @Component({
   selector: 'context',
@@ -25,6 +27,7 @@ export class ContextComponent implements AfterViewInit, OnChanges, OnDestroy {
   private loading = inject(LoadingService);
   private http = inject(FetchHttpService);
   private endpoints = inject(TypeRegistryService);
+  private repos = inject(RepoRegistryService);
   private aborted = false;
 
   ngAfterViewInit(): void {
@@ -49,24 +52,29 @@ export class ContextComponent implements AfterViewInit, OnChanges, OnDestroy {
     const endpointKey: string | undefined = this.attrs?.['type'];
     let url: string | null = null;
     let method = (this.attrs?.['method'] || '').toString().toUpperCase();
+    let repo: any = null;
 
     if (typeof directUrl === 'string' && directUrl.trim()) {
       url = directUrl.trim();
     } else if (endpointKey) {
       const resolved = this.endpoints.resolve(endpointKey);
       if (resolved) {
-        url = resolved.url;
-        if (!method) method = (resolved.method || 'GET').toUpperCase();
+        if ((resolved as any).kind === 'http') {
+          url = (resolved as any).url;
+          if (!method) method = (((resolved as any).method) || 'GET').toUpperCase();
+        } else if ((resolved as any).kind === 'repo') {
+          repo = resolved;
+        }
       }
     }
 
-    if (!url) {
-      // No URL resolved; do not render
+    if (!url && !repo) {
+      // No source resolved; do not render
       this.clear();
       return;
     }
 
-    if (!method) method = 'GET';
+    if (url && !method) method = 'GET';
 
     // Build URL with params for GET requests if provided
     const headersRaw = this.attrs?.['headers'];
@@ -102,7 +110,7 @@ export class ContextComponent implements AfterViewInit, OnChanges, OnDestroy {
       extras[k] = v;
     }
 
-    if (method === 'GET') {
+    if (url && method === 'GET') {
       const baseParams = this.parseParamsToObject(paramsRaw);
       const mergedParams = { ...extras, ...baseParams };
       if (Object.keys(mergedParams).length > 0) {
@@ -113,38 +121,76 @@ export class ContextComponent implements AfterViewInit, OnChanges, OnDestroy {
     // Start global loading for this context instance
     this.loading.begin();
     try {
-      let finalBody: any = undefined;
-      if (method !== 'GET') {
-        const baseBody = bodyIsExplicit ? this.parseBodyToObject(bodyRaw) : undefined;
-        finalBody = { ...extras, ...(baseBody || {}) };
-      }
+      if (url) {
+        let finalBody: any = undefined;
+        if (method !== 'GET') {
+          const baseBody = bodyIsExplicit ? this.parseBodyToObject(bodyRaw) : undefined;
+          finalBody = { ...extras, ...(baseBody || {}) };
+        }
 
-      const { ok, data } = await this.http.fetch({ url, method, headers: headersRaw, timeoutMs, body: finalBody });
+        const { ok, data } = await this.http.fetch({ url, method, headers: headersRaw, timeoutMs, body: finalBody });
 
-      if (this.aborted) return;
-      if (!ok) { this.clear(); return; }
+        if (this.aborted) return;
+        if (!ok) { this.clear(); return; }
 
-      const successPath = this.attrs?.['successPath'] || this.attrs?.['path'];
-      const minCount = Number(this.attrs?.['minCount'] ?? this.attrs?.['min'] ?? 1);
-      const requireTruthy = this.attrs?.['requireTruthy'] ?? true;
+        const successPath = this.attrs?.['successPath'] || this.attrs?.['path'];
+        const minCount = Number(this.attrs?.['minCount'] ?? this.attrs?.['min'] ?? 1);
+        const requireTruthy = this.attrs?.['requireTruthy'] ?? true;
 
-      const value = successPath ? this.getByPath(data, String(successPath)) : data;
+        const value = successPath ? this.getByPath(data, String(successPath)) : data;
 
-      let allow = false;
-      if (Array.isArray(value)) {
-        allow = value.length >= minCount;
-      } else if (typeof value === 'object' && value !== null) {
-        allow = requireTruthy ? Object.keys(value).length > 0 : true;
-      } else {
-        allow = requireTruthy ? !!value : true;
-      }
+        let allow = false;
+        if (Array.isArray(value)) {
+          allow = value.length >= minCount;
+        } else if (typeof value === 'object' && value !== null) {
+          allow = requireTruthy ? Object.keys(value).length > 0 : true;
+        } else {
+          allow = requireTruthy ? !!value : true;
+        }
 
-      if (allow) {
-        this.contentHost.clear();
-        this.renderer.renderXmlContent(this.xmlContent!, this.contentHost);
-      } else {
-        this.clear();
-      }
+        if (allow) {
+          this.contentHost.clear();
+          this.renderer.renderXmlContent(this.xmlContent!, this.contentHost);
+        } else {
+          this.clear();
+        }
+      } else if (repo) {
+         // Repository branch: dynamic via RepoRegistryService
+         const baseParams = this.parseParamsToObject(paramsRaw);
+         const query = { ...extras, ...baseParams } as Record<string, any>;
+
+         let repoData: any;
+         try {
+           repoData = await this.repos.invoke((repo as any).repo || 'relation', (repo as any).action || 'getRelations', query);
+         } catch {
+           this.clear();
+           return;
+         }
+
+         if (this.aborted) return;
+
+         const successPath = this.attrs?.['successPath'] || this.attrs?.['path'];
+         const minCount = Number(this.attrs?.['minCount'] ?? this.attrs?.['min'] ?? 1);
+         const requireTruthy = this.attrs?.['requireTruthy'] ?? true;
+
+         const value = successPath ? this.getByPath(repoData, String(successPath)) : repoData;
+
+         let allow = false;
+         if (Array.isArray(value)) {
+           allow = value.length >= minCount;
+         } else if (typeof value === 'object' && value !== null) {
+           allow = requireTruthy ? Object.keys(value).length > 0 : true;
+         } else {
+           allow = requireTruthy ? !!value : true;
+         }
+
+         if (allow) {
+           this.contentHost.clear();
+           this.renderer.renderXmlContent(this.xmlContent!, this.contentHost);
+         } else {
+           this.clear();
+         }
+       }
     } finally {
       // Ensure we always end loading regardless of outcome
       this.loading.end();

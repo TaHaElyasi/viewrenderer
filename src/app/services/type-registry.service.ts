@@ -1,18 +1,30 @@
 import { Injectable } from '@angular/core';
 
-export interface TypeConfig {
+export type HttpTypeConfig = {
+  kind: 'http';
   url: string;
   method?: string; // default GET
-}
+};
+
+export type RepoTypeConfig = {
+  kind: 'repo';
+  repo: 'relation'; // we can extend later for other repos
+  action: 'getRelations';
+};
+
+export type TypeConfig = HttpTypeConfig | RepoTypeConfig;
 
 @Injectable({ providedIn: 'root' })
 export class TypeRegistryService {
-  // NOTE: Replace these placeholders with your real types
+  // Registry supports both http endpoints and repository actions
   private readonly map: Record<string, TypeConfig> = {
-    users: { url: 'https://jsonplaceholder.typicode.com/users', method: 'GET' },
-    search: { url: 'https://jsonplaceholder.typicode.com/comments', method: 'GET' },
-    // جدید: نمونه type POST
-    createpost: { url: 'https://jsonplaceholder.typicode.com/posts', method: 'POST' },
+    // HTTP samples
+    users: { kind: 'http', url: 'https://jsonplaceholder.typicode.com/users', method: 'GET' },
+    search: { kind: 'http', url: 'https://jsonplaceholder.typicode.com/comments', method: 'GET' },
+    createpost: { kind: 'http', url: 'https://jsonplaceholder.typicode.com/posts', method: 'POST' },
+
+    // Repository-based sample
+    relations: { kind: 'repo', repo: 'relation', action: 'getRelations' },
   };
 
   resolve(key: string | undefined | null): TypeConfig | null {
