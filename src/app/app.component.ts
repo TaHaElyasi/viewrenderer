@@ -304,11 +304,11 @@ export class AppComponent {
       </menu-section>
     </context>
 
-    <!-- مثال ریلیشن: استفاده از ریپازیتوری relation/getRelations -->
-    <context type="relations" id="123" relationTypes="friend,colleague" minCount="1">
+    <!-- مثال ریلیشن: استفاده از ریپازیتوری relation/getRelations با کانفیگ context در TypeRegistry -->
+    <context type="relations" id="101" relationTypes="friend,colleague" minCount="1">
       <menu-section id="relations" title="روابط کاربر">
-          <card title="روابط کاربر">
-            <label text="روابط کاربر یافت شد (minCount=1)."></label>
+          <card title="روابط کاربر (id=101)">
+            <label text="contextProvider به‌صورت داخلی از روی TypeRegistry خوانده می‌شود و با id ست می‌شود."></label>
           </card>
       </menu-section>
     </context>

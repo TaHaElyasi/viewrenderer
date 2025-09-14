@@ -2,31 +2,61 @@ import { Provider, Injector } from '@angular/core';
 import { provideRepoHandler } from './services/repo-registry.service';
 import { RelationRepository } from './repository/relation-repository';
 import { RelationContext } from './services/relation-context';
+import { lastValueFrom } from 'rxjs';
+import { provideContextSetter } from './services/context-registry.service';
 
+async function waitForContextId(inj: Injector, retries = 10, delayMs = 200): Promise<string | string[] | undefined> {
+    const EntityCtx = inj.get(RelationContext);
+
+    for (let i = 0; i < retries; i++) {
+        const effective = EntityCtx.effectiveContext();
+        if (effective?.id) {
+            return effective.id;
+        }
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+
+    return undefined;
+}
+
+// Context setters (renamed for clarity)
+export const CONTEXT_SETTER_PROVIDERS: Provider[] = [
+  // Register relation context setter for dynamic use from ContextComponent
+  provideContextSetter('relation', (inj: Injector, value: any, extras) => {
+    try {
+      const ctx = inj.get(RelationContext);
+      if (ctx && typeof (ctx as any).setContext === 'function') {
+        (ctx as any).setContext(value);
+      }
+    } catch {}
+  }),
+];
+
+// Repository handlers (kept separate from context setters)
 export const REPO_HANDLER_PROVIDERS: Provider[] = [
   provideRepoHandler('relation', 'getrelations', async (inj: Injector, query: Record<string, any>) => {
     const repo = inj.get(RelationRepository);
 
-    // Try to get id from RelationContext in the current injector subtree; fallback to query
-    let id: string | string[] | undefined;
-    try {
-      const ctx = inj.get(RelationContext);
-      let cur: any = (ctx as any).current ? (ctx as any).current() : undefined;
-      if (cur == null && (ctx as any).peek) cur = (ctx as any).peek();
-      if (cur == null && 'value' in (ctx as any)) cur = (ctx as any).value;
-      if (cur != null) id = cur as any;
-    } catch {
-      // ignore if not provided in this subtree
-    }
+    // Prefer id from query; if missing, fallback to RelationContext.effectiveContext
+    let id: string | string[] | undefined = (query['id'] ?? query['Id'] ?? query['ids']) as any;
 
-    if (id == null) {
-      id = (query['id'] ?? query['Id'] ?? query['ids']) as any;
-    }
+    if (id == null || (Array.isArray(id) && id.length === 0)) {
+            try {
+                id = await waitForContextId(inj);
+            } catch {
+                // ignore if RelationContext not available
+            }
+        }
 
-    if (typeof id === 'string') {
-      const t = id.trim();
-      id = t.includes(',') ? t.split(',').map((s: string) => s.trim()).filter(Boolean) : t;
-    }
+        if (typeof id === 'string') {
+            const t = id.trim();
+            id = t.includes(',')
+                ? t
+                      .split(',')
+                      .map((s: string) => s.trim())
+                      .filter(Boolean)
+                : t;
+        }
 
     let relationTypes: string | string[] | null | undefined = (query['relationTypes'] ?? query['types']) as any;
     if (typeof relationTypes === 'string') {
@@ -42,7 +72,6 @@ export const REPO_HANDLER_PROVIDERS: Provider[] = [
       return [];
     }
 
-    const { lastValueFrom } = await import('rxjs');
     return await lastValueFrom(repo.getRelations(id as any, relationTypes as any, page, pageSize));
   }),
 ];

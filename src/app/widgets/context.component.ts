@@ -1,4 +1,4 @@
-import { Component, Input, ViewChild, ViewContainerRef, AfterViewInit, OnChanges, SimpleChanges, OnDestroy, inject } from '@angular/core'
+import { Component, Input, ViewChild, ViewContainerRef, AfterViewInit, OnChanges, SimpleChanges, OnDestroy, inject, Injector } from '@angular/core'
 import { CommonModule } from '@angular/common';
 import { AtomicRendererService } from '../services/atomic-renderer.service';
 import { LoadingService } from '../services/loading.service';
@@ -6,6 +6,7 @@ import { FetchHttpService } from '../services/fetch-http.service';
 import { TypeRegistryService } from '../services/type-registry.service';
 import { RepoRegistryService } from '../services/repo-registry.service';
 import { lastValueFrom } from 'rxjs';
+import { ContextRegistryService } from '../services/context-registry.service';
 
 @Component({
   selector: 'context',
@@ -28,6 +29,8 @@ export class ContextComponent implements AfterViewInit, OnChanges, OnDestroy {
   private http = inject(FetchHttpService);
   private endpoints = inject(TypeRegistryService);
   private repos = inject(RepoRegistryService);
+  private injector = inject(Injector);
+  private contextRegistry = inject(ContextRegistryService);
   private aborted = false;
 
   ngAfterViewInit(): void {
@@ -53,11 +56,14 @@ export class ContextComponent implements AfterViewInit, OnChanges, OnDestroy {
     let url: string | null = null;
     let method = (this.attrs?.['method'] || '').toString().toUpperCase();
     let repo: any = null;
+    // نگه‌داری کانفیگ رزولوشن برای استفاده بعدی (مثلاً contextProvider)
+    let resolvedCfg: any = null;
 
     if (typeof directUrl === 'string' && directUrl.trim()) {
       url = directUrl.trim();
     } else if (endpointKey) {
       const resolved = this.endpoints.resolve(endpointKey);
+      resolvedCfg = resolved;
       if (resolved) {
         if ((resolved as any).kind === 'http') {
           url = (resolved as any).url;
@@ -159,9 +165,21 @@ export class ContextComponent implements AfterViewInit, OnChanges, OnDestroy {
          const baseParams = this.parseParamsToObject(paramsRaw);
          const query = { ...extras, ...baseParams } as Record<string, any>;
 
+         // Dynamically set a Context via registry before invoking repo
+         // Now we ONLY use registry-provided contextProvider; XML attrs are ignored.
+         const contextProviderKey = (resolvedCfg as any)?.contextProvider as string | undefined;
+         if (contextProviderKey) {
+           const contextValue = (query as any)['id'] ?? (query as any)['ids'] ?? undefined;
+           if (contextValue !== undefined) {
+             try {
+               this.contextRegistry.set(contextProviderKey, contextValue, this.injector, { query, attrs: this.attrs });
+             } catch {}
+           }
+         }
+
          let repoData: any;
          try {
-           repoData = await this.repos.invoke((repo as any).repo || 'relation', (repo as any).action || 'getRelations', query);
+           repoData = await this.repos.invoke((repo as any).repo || 'relation', (repo as any).action || 'getRelations', query, this.injector);
          } catch {
            this.clear();
            return;

@@ -4,6 +4,6 @@ import { ContextTreeService } from "@hasan-akbari/context-tree";
 
 
 @Injectable()
-export class RelationContext extends ContextTreeService<string>{
+export class RelationContext extends ContextTreeService<any>{
 
 }

@@ -10,6 +10,8 @@ export type RepoTypeConfig = {
   kind: 'repo';
   repo: 'relation'; // we can extend later for other repos
   action: 'getRelations';
+  // اختیاری: نام contextProvider برای ست‌کردن داینامیک کانتکست قبل از فراخوانی ریپو
+  contextProvider?: string;
 };
 
 export type TypeConfig = HttpTypeConfig | RepoTypeConfig;
@@ -24,7 +26,7 @@ export class TypeRegistryService {
     createpost: { kind: 'http', url: 'https://jsonplaceholder.typicode.com/posts', method: 'POST' },
 
     // Repository-based sample
-    relations: { kind: 'repo', repo: 'relation', action: 'getRelations' },
+    relations: { kind: 'repo', repo: 'relation', action: 'getRelations', contextProvider: 'relation' },
   };
 
   resolve(key: string | undefined | null): TypeConfig | null {

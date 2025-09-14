@@ -3,7 +3,7 @@ import { Inject, Injectable, InjectionToken, Optional, Injector, Provider } from
 export interface RepoActionHandler {
   readonly repo: string;
   readonly action: string;
-  invoke(query: Record<string, any>): Promise<any>;
+  invoke(query: Record<string, any>, callerInj?: Injector): Promise<any>;
 }
 
 export const REPO_HANDLERS = new InjectionToken<RepoActionHandler[]>('REPO_HANDLERS');
@@ -18,10 +18,11 @@ export function provideRepoHandler(
     provide: REPO_HANDLERS,
     multi: true,
     deps: [Injector],
-    useFactory: (inj: Injector): RepoActionHandler => ({
+    useFactory: (appInj: Injector): RepoActionHandler => ({
       repo,
       action,
-      invoke: (query) => invoker(inj, query),
+      // Prefer caller injector when provided (local component subtree)
+      invoke: (query, callerInj?: Injector) => invoker(callerInj ?? appInj, query),
     }),
   };
 }
@@ -32,7 +33,7 @@ export class RepoRegistryService {
     @Optional() @Inject(REPO_HANDLERS) private handlers: RepoActionHandler[] | null,
   ) {}
 
-  async invoke(repoKey: string, action: string, query: Record<string, any>): Promise<any> {
+  async invoke(repoKey: string, action: string, query: Record<string, any>, callerInj?: Injector): Promise<any> {
     const repo = (repoKey || '').toLowerCase();
     const act = (action || '').toLowerCase();
 
@@ -45,6 +46,6 @@ export class RepoRegistryService {
       throw new Error(`No handler registered for repo='${repoKey}' action='${action}'`);
     }
 
-    return handler.invoke(query);
+    return handler.invoke(query, callerInj);
   }
 }

@@ -6,7 +6,7 @@ import { routes } from './app.routes'
 import { RelationApi } from './api/relation'
 import { RelationRepository } from './repository/relation-repository'
 import { RepoRegistryService } from './services/repo-registry.service'
-import { REPO_HANDLER_PROVIDERS } from './repo-handlers'
+import { REPO_HANDLER_PROVIDERS, CONTEXT_SETTER_PROVIDERS } from './repo-handlers'
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -14,6 +14,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(),
     RelationApi,
     RepoRegistryService,
+    ...CONTEXT_SETTER_PROVIDERS,
     ...REPO_HANDLER_PROVIDERS,
   ],
 }
