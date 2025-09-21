@@ -7,6 +7,7 @@ import { TypeRegistryService } from '../services/type-registry.service';
 import { RepoRegistryService } from '../services/repo-registry.service';
 import { lastValueFrom } from 'rxjs';
 import { ContextRegistryService } from '../services/context-registry.service';
+import { StateContext } from '../services/state-context';
 
 @Component({
   selector: 'context',
@@ -31,6 +32,7 @@ export class ContextComponent implements AfterViewInit, OnChanges, OnDestroy {
   private repos = inject(RepoRegistryService);
   private injector = inject(Injector);
   private contextRegistry = inject(ContextRegistryService);
+  private stateContext = inject(StateContext);
   private aborted = false;
 
   ngAfterViewInit(): void {
@@ -154,7 +156,7 @@ export class ContextComponent implements AfterViewInit, OnChanges, OnDestroy {
           allow = requireTruthy ? !!value : true;
         }
 
-        if (allow) {
+        if (allow || this.stateContext.effectiveContext()?.editMode) {
           this.contentHost.clear();
           this.renderer.renderXmlContent(this.xmlContent!, this.contentHost);
         } else {
@@ -202,7 +204,7 @@ export class ContextComponent implements AfterViewInit, OnChanges, OnDestroy {
            allow = requireTruthy ? !!value : true;
          }
 
-         if (allow) {
+         if (allow || this.stateContext.effectiveContext()?.editMode) {
            this.contentHost.clear();
            this.renderer.renderXmlContent(this.xmlContent!, this.contentHost);
          } else {

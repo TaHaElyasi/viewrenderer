@@ -1,27 +1,56 @@
-import { Component } from '@angular/core';
+import { Component, computed, signal, WritableSignal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ViewRendererComponent } from './view-renderer/view-renderer.component';
 import { LoadingService } from './services/loading.service';
-import { map } from 'rxjs/operators';
-import { Observable } from 'rxjs';
+import { map, distinctUntilChanged, observeOn } from 'rxjs/operators';
+import { Observable, asyncScheduler } from 'rxjs';
+import { StateContext } from './services/state-context';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [FormsModule, CommonModule, ViewRendererComponent],
+  providers:[StateContext],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
 export class AppComponent {
   title = 'viewrenderer';
+  editMode = signal(true);
+  reload:WritableSignal<boolean> = signal(false);
+  editModeText = computed(() => {
+        return this.editMode() ? 'Go To Brows Mode' : 'Go To Edit Mode';
+    });
 
   // آیا هنوز صفحه در حال لود شدن است؟ (بر اساس شمارنده جهانی درخواست‌ها)
   isLoading$: Observable<boolean>;
 
-  constructor(private loading: LoadingService) {
-    this.isLoading$ = this.loading.isLoading$.pipe(map(count => (count as unknown as number) > 0));
+  constructor(private loading: LoadingService, private stateContext: StateContext) {
+    stateContext.setContext({
+      editMode: true,
+      isReadOnly: false
+    })
+    this.isLoading$ = this.loading.isLoading$
+      .pipe(
+        map(count => (count as unknown as number) > 0),
+        distinctUntilChanged(),
+        // انتشار وضعیت لودینگ را به چرخه بعدی موکول می‌کند تا NG0100 رخ ندهد
+        observeOn(asyncScheduler)
+      );
   }
+
+  setState(): void {
+        this.reload.set(true);
+        this.editMode.set(!this.editMode());
+        this.stateContext.setContext({
+            editMode: this.editMode(),
+            isReadOnly: false,
+        });
+        setTimeout(() => {
+            this.reload.set(false);
+        })
+    }
 
   xml: string = `
 <card title="نمونه کارت">
