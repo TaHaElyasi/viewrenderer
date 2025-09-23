@@ -41,15 +41,11 @@ export class AppComponent {
   }
 
   setState(): void {
-        this.reload.set(true);
         this.editMode.set(!this.editMode());
         this.stateContext.setContext({
             editMode: this.editMode(),
             isReadOnly: false,
         });
-        setTimeout(() => {
-            this.reload.set(false);
-        })
     }
 
   xml: string = `

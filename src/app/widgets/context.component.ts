@@ -1,4 +1,4 @@
-import { Component, Input, ViewChild, ViewContainerRef, AfterViewInit, OnChanges, SimpleChanges, OnDestroy, inject, Injector } from '@angular/core'
+import { Component, Input, ViewChild, ViewContainerRef, AfterViewInit, OnChanges, SimpleChanges, OnDestroy, inject, Injector, effect } from '@angular/core'
 import { CommonModule } from '@angular/common';
 import { AtomicRendererService } from '../services/atomic-renderer.service';
 import { LoadingService } from '../services/loading.service';
@@ -34,6 +34,13 @@ export class ContextComponent implements AfterViewInit, OnChanges, OnDestroy {
   private contextRegistry = inject(ContextRegistryService);
   private stateContext = inject(StateContext);
   private aborted = false;
+
+  constructor(){
+    effect(()=>{
+      this.stateContext.effectiveContext()
+        this.tryFetchAndRender();
+    },{allowSignalWrites:true})
+  }
 
   ngAfterViewInit(): void {
     this.tryFetchAndRender();
