@@ -8,21 +8,15 @@ import { WidgetComponent } from '../interfaces/widget.interface';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <form class="ui-form" [formGroup]="form" (ngSubmit)="onSubmit()">
-      <div class="ui-form-fields">
+    <form class="w-full p-4 border border-base-300 rounded-xl" [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="grid gap-3">
         <ng-container #contentHost></ng-container>
       </div>
-      <div class="ui-form-actions" *ngIf="submitLabel">
-        <button type="submit" class="ui-button">{{ submitLabel }}</button>
+      <div class="mt-3" *ngIf="submitLabel">
+        <button type="submit" class="btn btn-primary">{{ submitLabel }}</button>
       </div>
     </form>
-  `,
-  styles: [`
-    .ui-form { display: block; padding: 8px; border: 1px solid #e5e7eb; border-radius: 8px; }
-    .ui-form-fields { display: grid; gap: 12px; }
-    .ui-form-actions { margin-top: 12px; }
-    .ui-button { background: #4f46e5; color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; }
-  `]
+  `
 })
 export class FormComponent implements OnInit, OnChanges, OnDestroy, WidgetComponent {
   @Input() attrs?: Record<string, any>;

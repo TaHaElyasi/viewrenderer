@@ -1,24 +1,36 @@
 <div class="app">
   <div class="sidebar">
-    <button (click)="loadExample('exampleCard')">Card</button>
-    <button (click)="loadExample('exampleLabel')">Label</button>
-    <button (click)="loadExample('exampleButton')">Button</button>
-    <button (click)="loadExample('exampleTabs')">Tabs</button>
-    <button (click)="loadExample('exampleLazy')">Lazy</button>
-    <button (click)="loadExample('exampleTable')">Table</button>
-    <button (click)="loadExample('exampleForm')">Form</button>
-    <button (click)="loadExample('exampleMultiForm')">Multi Form</button>
-    <button (click)="loadExample('exampleInputsOutsideForm')">Inputs Outside Form</button>
-    <button (click)="loadExample('exampleInputsInTabs')">Inputs In Tabs</button>
+    <button class="btn btn-primary p-2 m-1 rounded-lg" (click)="loadExample('exampleCard')">Card</button>
+    <button class="btn btn-primary p-2 m-1 rounded-lg" (click)="loadExample('exampleLabel')">Label</button>
+    <button class="btn btn-primary p-2 m-1 rounded-lg" (click)="loadExample('exampleButton')">Button</button>
+    <button class="btn btn-primary p-2 m-1 rounded-lg" (click)="loadExample('exampleTabs')">Tabs</button>
+    <button class="btn btn-primary p-2 m-1 rounded-lg" (click)="loadExample('exampleLazy')">Lazy</button>
+    <button class="btn btn-primary p-2 m-1 rounded-lg" (click)="loadExample('exampleTable')">Table</button>
+    <button class="btn btn-primary p-2 m-1 rounded-lg" (click)="loadExample('exampleForm')">Form</button>
+    <button class="btn btn-primary p-2 m-1 rounded-lg" (click)="loadExample('exampleMultiForm')">Multi Form</button>
+    <button class="btn btn-primary p-2 m-1 rounded-lg" (click)="loadExample('exampleInputsOutsideForm')">Inputs Outside Form</button>
+    <button class="btn btn-primary p-2 m-1 rounded-lg" (click)="loadExample('exampleInputsInTabs')">Inputs In Tabs</button>
+    <button class="btn btn-primary p-2 m-1 rounded-lg" (click)="loadExample('exampleMenu')">Menu</button>
+    <button class="btn btn-accent p-2 m-1 rounded-lg" (click)="loadExample('exampleContext')">Context</button>
   </div>
   <div class="main">
     <textarea [(ngModel)]="xml" rows="10" style="width: 100%;"></textarea>
     <div class="actions">
       <button (click)="render()">Render XML</button>
     </div>
-
+    <button class="btn btn-accent p-2 m-1 rounded-lg" (click)="setState()">{{editModeText()}}</button>
     <div class="output">
       <app-view-renderer [xml]="xml" (formChange)="onFormChange($event)" (formSubmit)="onFormSubmit($event)" (inputChange)="onInputChange($event)"></app-view-renderer>
+      <!-- Local (content-only) loading overlay -->
+      <div class="loading-overlay" *ngIf="(isLoading$ | async)">
+        <div class="loading-card" role="status" aria-live="polite">
+          <div class="spinner" aria-hidden="true"></div>
+          <div class="loading-text">
+            <h2>در حال آماده‌سازی محتوا</h2>
+            <p>دریافت و پردازش داده‌ها در حال انجام است…</p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="debug">

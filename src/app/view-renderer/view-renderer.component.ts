@@ -1,11 +1,13 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild, ViewContainerRef } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { AtomicRendererService, RendererHooks } from '../services/atomic-renderer.service'
+import { RelationContext } from '../services/relation-context'
 
 @Component({
   selector: 'app-view-renderer',
   standalone: true,
   imports: [CommonModule],
+  providers: [RelationContext],
   template: `
     <div class="view-renderer">
       <ng-container #host></ng-container>

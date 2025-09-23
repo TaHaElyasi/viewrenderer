@@ -7,3 +7,15 @@ textarea { width: 100%; min-height: 180px; font-family: ui-monospace, SFMono-Reg
 .examples { display: flex; gap: 8px; flex-wrap: wrap; }
 .example-btn { padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; cursor: pointer; }
 .renderer { background: #fff; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 12px; }
+
+/* Scope the overlay to only the content area */
+.output { position: relative; min-height: 120px; }
+.loading-overlay { position: absolute; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; z-index: 10; animation: fadeIn .2s ease-out; }
+.loading-card { background: white; border-radius: 16px; padding: 24px 28px; box-shadow: 0 10px 25px rgba(0,0,0,.15); display: flex; align-items: center; gap: 16px; max-width: 520px; width: calc(100% - 32px); border: 1px solid #e5e7eb; animation: popIn .22s ease-out; }
+.loading-text h2 { margin: 0 0 6px; font-size: 18px; color: #0f172a; }
+.loading-text p { margin: 0; color: #475569; font-size: 14px; }
+.spinner { width: 36px; height: 36px; border-radius: 50%; border: 3px solid #e2e8f0; border-top-color: #3b82f6; animation: spin 1s linear infinite; }
+
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes popIn { from { transform: translateY(8px) scale(.98); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }

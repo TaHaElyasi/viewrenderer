@@ -8,26 +8,17 @@ import { WidgetComponent } from '../interfaces/widget.interface';
   standalone: true,
   imports: [NgFor, NgClass, TabComponent],
   template: `
-    <div class="ui-tabs">
-      <div class="ui-tabs-header">
-        <div 
-          class="ui-tab-header-item" 
-          *ngFor="let tab of items; let i = index" 
-          [ngClass]="{active: i === activeIndex}"
-          (click)="select(i)">
+    <div class="w-full">
+      <div class="tabs tabs-bordered">
+        <a class="tab" *ngFor="let tab of items; let i = index" [class.tab-active]="i === activeIndex" (click)="select(i)">
           {{ tab.label || ('تب ' + (i+1)) }}
-        </div>
+        </a>
       </div>
-      <div class="ui-tabs-content">
+      <div class="pt-2">
         <ng-container #contentHost></ng-container>
       </div>
     </div>
-  `,
-  styles: [`
-    .ui-tabs-header { display: flex; gap: 8px; border-bottom: 1px solid #e5e7eb; margin-bottom: 8px; }
-    .ui-tab-header-item { padding: 6px 10px; border-radius: 8px 8px 0 0; cursor: pointer; }
-    .ui-tab-header-item.active { background: #eef2ff; color: #3730a3; font-weight: 600; }
-  `]
+  `
 })
 export class TabsComponent implements AfterViewInit, OnChanges, WidgetComponent {
   @ViewChildren(TabComponent) tabs?: QueryList<TabComponent>;

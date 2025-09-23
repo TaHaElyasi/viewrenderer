@@ -147,10 +147,24 @@ export class AtomicRendererService {
       } catch {}
     }
 
-    // Set direct inputs for backward compatibility
-    for (const key of Object.keys(attrs)) {
-      try { compRef.setInput(key as any, attrs[key]); } catch {}
-    }
+    // Set only declared @Input()s to avoid NG0303; unknown attrs remain inside 'attrs'
+    try {
+      const ctor: any = (compRef.instance as any)?.constructor;
+      const inputMap: Record<string, string> | undefined = ctor?.ɵcmp?.inputs;
+      if (inputMap) {
+        for (const publicName of Object.keys(inputMap)) {
+          if (publicName in attrs) {
+            compRef.setInput(publicName as any, attrs[publicName]);
+          } else {
+            // also check kebab-case equivalent if user provided it
+            const kebab = publicName.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+            if (kebab in attrs) {
+              compRef.setInput(publicName as any, attrs[kebab]);
+            }
+          }
+        }
+      }
+    } catch {}
 
     // For atomic widgets, don't render children here
     if (isAtomic) {

@@ -9,20 +9,18 @@ import { WidgetComponent } from '../interfaces/widget.interface';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <label class="ui-field">
-      <span class="ui-field-label">{{ label }}</span>
-      <select class="ui-field-control" [formControl]="control">
+    <label class="form-control w-full">
+      <div class="label">
+        <span class="label-text text-xs text-base-content/80">{{ label }}</span>
+      </div>
+      <select class="select select-bordered w-full" [formControl]="control">
         <option *ngFor="let opt of options" [value]="opt.value">{{ opt.label }}</option>
       </select>
-      <small class="ui-error" *ngIf="control.invalid && (control.dirty || control.touched)">{{ errorText }}</small>
+      <div class="label" *ngIf="control.invalid && (control.dirty || control.touched)">
+        <span class="label-text-alt text-error text-xs">{{ errorText }}</span>
+      </div>
     </label>
-  `,
-  styles: [`
-    .ui-field { display: grid; gap: 6px; }
-    .ui-field-label { font-size: 12px; color: #374151; }
-    .ui-field-control { padding: 8px 10px; border: 1px solid #e5e7eb; border-radius: 8px; }
-    .ui-error { color: #b91c1c; font-size: 12px; }
-  `]
+  `
 })
 export class SelectComponent implements OnInit, OnChanges, OnDestroy, WidgetComponent {
   @Input() attrs?: Record<string, any>;
