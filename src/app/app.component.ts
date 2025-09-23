@@ -28,7 +28,7 @@ export class AppComponent {
 
   constructor(private loading: LoadingService, private stateContext: StateContext) {
     stateContext.setContext({
-      editMode: true,
+      editMode: false,
       isReadOnly: false
     })
     this.isLoading$ = this.loading.isLoading$
@@ -464,6 +464,32 @@ exampleMenu: string = `
   </row>
 </menu>
 `
+exampleEmptyTab = `
+<tabs>
+      <tab label="تب اول">
+        <context type="users" minCount="1000">
+              <card title="این بخش نباید نمایش داده شود">
+                <label text="به خاطر minCount بالا، context جلوی رندر را می‌گیرد."></label>
+              </card>
+        </context>
+      </tab>
+      <tab label="تب دوم">
+        
+      </tab>
+    </tabs>
+`;
+
+exampleEmptyMenu = `
+<menu>
+  <context type="users" minCount="1000">
+    <menu-section id="too-many" title="کاربران (نامعتبر)">
+        <card title="این بخش نباید نمایش داده شود">
+          <label text="به خاطر minCount بالا، context جلوی رندر را می‌گیرد."></label>
+        </card>
+    </menu-section>
+  </context>
+</menu>
+`;
 
   // Debug state
   lastInputChange: any = null;

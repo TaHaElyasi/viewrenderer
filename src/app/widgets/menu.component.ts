@@ -11,9 +11,9 @@ import { XmlParserService } from '../services/xml-parser.service';
     imports: [CommonModule, NgFor, NgClass, MenuSectionComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-    <div class="ui-menu flex flex-row items-start gap-6 w-full">
+    <div class="ui-menu flex flex-row items-start w-full" [ngClass]="{ 'gap-6': items.length > 0 }">
       <!-- Sidebar (right in RTL) -->
-      <div class="ui-menu-sidebar relative md:sticky md:top-6 shrink-0 w-full md:w-[220px] bg-transparent md:max-h-[calc(100vh-48px)] md:overflow-visible md:pr-4">
+      <div *ngIf="items.length > 0" class="ui-menu-sidebar relative md:sticky md:top-6 shrink-0 w-full md:w-[220px] bg-transparent md:max-h-[calc(100vh-48px)] md:overflow-visible md:pr-4">
         <!-- Vertical rail & dots -->
         <div class="ui-menu-rail hidden md:block absolute inset-y-0 right-0 w-[3px] bg-amber-500 rounded"></div>
         <span
@@ -150,6 +150,16 @@ export class MenuComponent implements WidgetComponent, AfterViewInit, OnChanges,
         });
     }
 
+    private setRootMenuEmpty(flag: boolean) {
+        const contentEl = this.getRootEl();
+        if (contentEl) {
+            const wrapper = contentEl.closest('.ui-menu') as HTMLElement | null;
+            if (wrapper) {
+                try { wrapper.dataset['menuEmpty'] = flag ? 'true' : 'false'; } catch {}
+            }
+        }
+    }
+
     register(section: MenuSectionComponent) {
         const id = section.id!;
         const title = section.title;
@@ -179,10 +189,13 @@ export class MenuComponent implements WidgetComponent, AfterViewInit, OnChanges,
         this.dotPositions = [];
         this._activeIndex.set(0);
         this.computeXmlSectionOrder();
+        // Mark as empty until sections are discovered
+        this.setRootMenuEmpty(true);
         this.renderer.renderXmlContent(this.xmlContent!, this.contentHost);
         // ابتدا spy را راه‌اندازی کن، سپس بازسازی را زمان‌بندی کن تا بعد از اعمال بایندینگ انجام شود
         queueMicrotask(() => {
             this.setupSpy();
+            this.attachLocalLoadingListeners();
             this.scheduleRebuild();
         });
     }
@@ -217,7 +230,7 @@ export class MenuComponent implements WidgetComponent, AfterViewInit, OnChanges,
         const rootEl = this.getRootEl();
         if (!rootEl) return;
         let sections = this.collectSectionsInDomOrder(rootEl);
-        if (!sections.length) return;
+        if (!sections.length) { this.setRootMenuEmpty(true); return; }
 
         // If we have XML-declared order (by id), sort the existing sections to match it
         if (this.xmlSectionOrder.length) {
@@ -249,6 +262,13 @@ export class MenuComponent implements WidgetComponent, AfterViewInit, OnChanges,
             if (this._activeIndex() >= this.items.length) this._activeIndex.set(Math.max(0, this.items.length - 1));
             this.cdr.markForCheck();
         }
+        // We have sections; mark as non-empty
+        this.setRootMenuEmpty(false);
+    }
+
+    // Local loading listener stub (to be filled if needed for showing a spinner)
+    private attachLocalLoadingListeners(): void {
+        // Intentionally left blank for now; prevents TS error when called.
     }
 
     private setupSpy() {
